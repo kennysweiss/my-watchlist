@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Watchlist">
+  <title>My Watchlist</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1c1c28;--border:#2a2a3a;--accent:#e8b86d;--accent2:#6d9be8;--text:#e8e8f0;--muted:#6b6b80;--danger:#e86d6d;--success:#6de8a0}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;-webkit-font-smoothing:antialiased}
+    #app{max-width:1100px;margin:0 auto;padding:0 20px 80px}
+
+    /* ── Setup screen ── */
+    #setup-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+    .setup-logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,10vw,4rem);letter-spacing:.04em;margin-bottom:8px}
+    .setup-logo span{color:var(--accent)}
+    .setup-tagline{color:var(--muted);font-size:.88rem;margin-bottom:48px}
+    .setup-cards{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%;max-width:640px;margin-bottom:32px}
+
+    /* Create card */
+    .create-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;flex:1;min-width:240px;max-width:300px;text-align:left;transition:border-color .2s}
+    .create-card:focus-within{border-color:var(--accent)}
+    .create-card-icon{font-size:1.8rem;margin-bottom:12px}
+    .create-card-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);margin-bottom:4px}
+    .create-card-desc{font-size:.78rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
+    .create-name-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;margin-bottom:12px}
+    .create-name-input:focus{border-color:var(--accent)}
+    .create-name-input::placeholder{color:var(--muted)}
+    .create-btn{width:100%;background:var(--accent);color:#0a0a0f;border:none;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.9rem;cursor:pointer;transition:opacity .2s}
+    .create-btn:hover{opacity:.85}
+
+    /* Join card */
+    .join-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;flex:1;min-width:240px;max-width:300px;text-align:left;transition:border-color .2s}
+    .join-card:focus-within{border-color:var(--accent2)}
+    .join-card-icon{font-size:1.8rem;margin-bottom:12px}
+    .join-card-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent2);margin-bottom:4px}
+    .join-card-desc{font-size:.78rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
+    .join-link-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;margin-bottom:12px}
+    .join-link-input:focus{border-color:var(--accent2)}
+    .join-link-input::placeholder{color:var(--muted)}
+    .join-btn{width:100%;background:var(--accent2);color:#0a0a0f;border:none;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.9rem;cursor:pointer;transition:opacity .2s}
+    .join-btn:hover{opacity:.85}
+    .setup-error{color:var(--danger);font-size:.8rem;margin-top:8px;min-height:18px;text-align:center}
+
+    /* ── Main app ── */
+    .header{padding:28px 0 24px;border-bottom:1px solid var(--border);margin-bottom:24px;position:relative;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .header::after{content:'';position:absolute;bottom:-1px;left:0;width:60px;height:2px;background:var(--accent)}
+    .header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,6vw,3rem);letter-spacing:.04em;line-height:1}
+    .header h1 span{color:var(--accent)}
+    .header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .stats{display:flex;gap:20px;flex-wrap:wrap}
+    .stat{display:flex;flex-direction:column;gap:1px}
+    .stat-value{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent);line-height:1}
+    .stat-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+    .stat-divider{width:1px;background:var(--border);align-self:stretch}
+    .sync-indicator{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:5px}
+    .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0}
+    .sync-dot.syncing{background:var(--accent);animation:pulse 1s infinite}
+    .sync-dot.error{background:var(--danger)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+    /* Room banner */
+    #room-banner{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    #room-banner.hidden{display:none}
+    .room-info{flex:1;min-width:0}
+    .room-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:2px}
+    .room-url{font-size:.78rem;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;font-family:monospace}
+    .room-url:hover{text-decoration:underline}
+    .room-actions{display:flex;gap:6px;flex-shrink:0}
+    .room-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.73rem;cursor:pointer;transition:all .15s}
+    .room-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* Config notice */
+    #config-notice{background:rgba(232,184,109,.07);border:1px solid rgba(232,184,109,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.8rem;line-height:1.7}
+    #config-notice.hidden{display:none}
+    #config-notice strong{color:var(--accent)}
+    #config-notice code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:.75rem;font-family:monospace}
+
+    /* Install banner */
+    #install-banner{display:none;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:10px 14px;margin-bottom:16px;align-items:center;gap:10px}
+    #install-banner.show{display:flex}
+    #install-banner p{flex:1;font-size:.82rem}
+    #install-banner p span{color:var(--accent);font-weight:500}
+    .banner-btn{background:var(--accent);color:#000;border:none;border-radius:6px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.8rem;cursor:pointer}
+    .banner-dismiss{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px}
+
+    /* Search */
+    .search-area{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px}
+    .search-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px}
+    .search-row{display:flex;gap:8px}
+    .search-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
+    .search-input:focus{border-color:var(--accent)}
+    .search-input::placeholder{color:var(--muted)}
+    .btn{background:var(--accent);color:#0a0a0f;border:none;border-radius:8px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;cursor:pointer;transition:opacity .2s;white-space:nowrap}
+    .btn:hover{opacity:.85}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .status-bar{font-size:.8rem;margin-top:8px;padding:7px 11px;border-radius:6px}
+    .status-loading{color:var(--muted);background:var(--surface2);border:1px solid var(--border)}
+    .status-error{color:var(--danger);background:rgba(232,109,109,.08);border:1px solid rgba(232,109,109,.2)}
+    .status-empty{color:var(--muted);background:var(--surface2);border:1px solid var(--border)}
+    .search-results{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+    .search-result{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .2s}
+    .search-result:hover{border-color:var(--accent)}
+    .result-img,.result-emoji{width:32px;height:44px;border-radius:3px;object-fit:cover;flex-shrink:0;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+    .result-info{flex:1;min-width:0}
+    .result-name{font-weight:500;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .result-meta{font-size:.7rem;color:var(--muted);margin-top:1px}
+    .result-add{font-size:.7rem;color:var(--accent);font-weight:500;flex-shrink:0}
+
+    /* Toolbar */
+    .toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+    .filters{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-btn{background:transparent;border:1px solid var(--border);border-radius:20px;padding:4px 12px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.72rem;cursor:pointer;transition:all .2s}
+    .filter-btn:hover{color:var(--text);border-color:var(--text)}
+    .filter-btn.active{background:var(--accent);border-color:var(--accent);color:#0a0a0f;font-weight:500}
+    .filter-btn.active-net{background:var(--accent2);border-color:var(--accent2);color:#0a0a0f;font-weight:500}
+
+    /* Network sections */
+    .network-section{margin-bottom:28px}
+    .network-heading{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+    /* Grid */
+    .shows-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+    @media(min-width:600px){.shows-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+
+    /* Cards */
+    .show-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;animation:fadeIn .25s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .show-card:hover{border-color:#3a3a50}
+    .show-card.dragging{opacity:.4;transform:scale(.97)}
+    .show-card.drag-over{border-color:var(--accent);transform:scale(1.02)}
+    .show-card.expanded{border-color:var(--accent)}
+    .card-poster{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:var(--surface2)}
+    .card-poster-ph{width:100%;aspect-ratio:3/4;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+    .card-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.4) 50%,transparent 100%);pointer-events:none}
+    .card-drag-handle{position:absolute;top:6px;left:6px;color:rgba(255,255,255,.5);font-size:.85rem;cursor:grab;pointer-events:all;padding:2px;line-height:1}
+    .card-drag-handle:active{cursor:grabbing}
+    .card-actions{position:absolute;top:4px;right:4px;display:flex;gap:3px}
+    .card-icon-btn{background:rgba(0,0,0,.5);border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:4px 5px;border-radius:4px;font-size:.75rem;line-height:1;transition:all .15s}
+    .card-icon-btn:hover{background:rgba(0,0,0,.8);color:#fff}
+    .card-icon-btn.danger:hover{color:var(--danger)}
+    .card-info{position:absolute;bottom:0;left:0;right:0;padding:8px 9px 9px}
+    .card-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.03em;line-height:1.1;margin-bottom:4px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+    .card-next{font-size:.65rem;line-height:1.3}
+    .card-next.upcoming{color:var(--accent)}
+    .card-next.soon{color:var(--success)}
+    .card-next.aired{color:rgba(255,255,255,.45)}
+    .card-next.loading{color:rgba(255,255,255,.35);font-style:italic}
+    .card-next.none{color:rgba(255,255,255,.3)}
+    .card-progress{font-size:.62rem;color:rgba(255,255,255,.4);margin-top:2px}
+
+    /* Expanded detail */
+    .card-detail{background:#0f0f18;border-top:2px solid var(--accent);padding:14px;display:none}
+    .details-open .card-detail{display:block}
+    .details-open .show-card{border-color:var(--accent)}
+    .detail-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+    .badge{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:4px;font-weight:500}
+    .badge-net{background:#2a2a40;color:#d0d0e8;border:1px solid #4a4a68}
+    .badge-run{background:rgba(109,232,160,.25);color:#6de8a0;border:1px solid rgba(109,232,160,.5)}
+    .badge-end{background:rgba(232,109,109,.25);color:#e86d6d;border:1px solid rgba(232,109,109,.5)}
+    .badge-oth{background:#2a2a40;color:#d0d0e8;border:1px solid #4a4a68}
+    .ep-tracker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .ep-label{font-size:.7rem;color:var(--text);text-transform:uppercase;letter-spacing:.08em}
+    .ep-controls{display:flex;align-items:center;gap:4px}
+    .ep-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--accent);background:#1e1e2e;color:var(--accent);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .15s;font-weight:bold}
+    .ep-btn:hover:not(:disabled){background:var(--accent);color:#000}
+    .ep-btn:disabled{opacity:.25;cursor:not-allowed;border-color:#5a5a78;color:#5a5a78}
+    .ep-val{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;min-width:50px;text-align:center;color:var(--accent)}
+    .ep-max{font-size:.72rem;color:var(--text);font-weight:500}
+    .notes-input{width:100%;background:#0a0a12;border:1px solid #3a3a58;border-radius:5px;padding:7px 10px;color:#e0e0f0;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;resize:none;transition:border-color .2s;margin-top:4px}
+    .notes-input:focus{border-color:var(--accent)}
+    .notes-input::placeholder{color:#5a5a78}
+    .show-card.done{opacity:.4;filter:grayscale(.5)}
+    .show-card.done:hover{opacity:.65}
+    .done-section-heading{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;color:var(--muted);margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .card-done-btn{display:inline-block;margin-top:6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.25);border-radius:4px;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:.65rem;padding:4px 8px;cursor:pointer;transition:all .15s;pointer-events:all;line-height:1.4}
+    .card-done-btn:hover{border-color:var(--success);color:var(--success)}
+    .card-done-btn.is-done{border-color:var(--success);color:var(--success);background:rgba(109,232,160,.15)}
+    .empty{padding:60px 20px;color:var(--muted);grid-column:1/-1;text-align:center}
+    .empty-icon{font-size:2.5rem;margin-bottom:12px}
+    .empty h3{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--text);margin-bottom:6px}
+    .empty p{font-size:.82rem}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    @media(max-width:480px){.search-row{flex-direction:column}#app{padding:0 12px 80px}.shows-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.setup-cards{flex-direction:column;align-items:center}}
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Setup screen -->
+  <div id="setup-screen" style="display:none">
+    <div class="setup-logo">MY <span>WATCHLIST</span></div>
+    <div class="setup-tagline">Track every show. Share with anyone.</div>
+    <div class="setup-cards">
+
+      <!-- Create card -->
+      <div class="create-card">
+        <div class="create-card-icon">✨</div>
+        <div class="create-card-title">New Watchlist</div>
+        <div class="create-card-desc">Start fresh and get a shareable link for friends to join.</div>
+        <input class="create-name-input" id="create-name" placeholder="Name it (e.g. K&M Shows)…" maxlength="40">
+        <button class="create-btn" onclick="createRoom()">Create Watchlist</button>
+      </div>
+
+      <!-- Join card -->
+      <div class="join-card">
+        <div class="join-card-icon">🔗</div>
+        <div class="join-card-title">Join Existing</div>
+        <div class="join-card-desc">Someone shared a watchlist link with you? Paste it here.</div>
+        <input class="join-link-input" id="join-input" placeholder="Paste link or room ID…">
+        <button class="join-btn" onclick="joinRoom()">Join Watchlist</button>
+      </div>
+
+    </div>
+    <div id="setup-error" class="setup-error"></div>
+  </div>
+
+  <!-- Main app -->
+  <div id="main-app" style="display:none">
+    <div id="config-notice" class="hidden">
+      ⚠️ <strong>Running in local mode.</strong> Add <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> as Netlify environment variables to enable sync &amp; sharing.
+    </div>
+    <div id="install-banner">
+      <p>📲 <span>Install as app</span> — add to your desktop or home screen</p>
+      <button class="banner-btn" id="install-btn">Install</button>
+      <button class="banner-dismiss" id="dismiss-banner">✕</button>
+    </div>
+    <header class="header">
+      <h1 id="room-title">MY <span>WATCHLIST</span></h1>
+      <div class="header-right">
+        <div id="stats-bar"></div>
+        <div id="sync-status" class="sync-indicator" style="display:none">
+          <div class="sync-dot" id="sync-dot"></div>
+          <span id="sync-label">Synced</span>
+        </div>
+      </div>
+    </header>
+    <div id="room-banner" class="hidden">
+      <div class="room-info">
+        <div class="room-label">📎 Share this link to collaborate</div>
+        <div class="room-url" id="room-url-display" onclick="copyRoomLink()"></div>
+      </div>
+      <div class="room-actions">
+        <button class="room-btn" id="copy-btn" onclick="copyRoomLink()">Copy Link</button>
+        <button class="room-btn" onclick="leaveRoom()">Leave Room</button>
+      </div>
+    </div>
+    <div class="search-area">
+      <div class="search-title">Add a Show</div>
+      <div class="search-row">
+        <input class="search-input" id="search-input" placeholder="Search for a show…" autocomplete="off">
+        <button class="btn" id="search-btn">Search</button>
+      </div>
+      <div id="search-status"></div>
+      <div id="search-results"></div>
+    </div>
+    <div id="toolbar"></div>
+    <div id="shows-grid"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+let SUPABASE_URL = '', SUPABASE_KEY = '', SUPABASE_OK = false;
+async function loadConfig() {
+  try {
+    const res = await fetch('/.netlify/functions/config');
+    if (res.ok) {
+      const cfg = await res.json();
+      SUPABASE_URL = cfg.supabaseUrl || '';
+      SUPABASE_KEY = cfg.supabaseKey || '';
+      SUPABASE_OK = !!(SUPABASE_URL && SUPABASE_KEY);
+    }
+  } catch {}
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const LOCAL_KEY = 'tv-tracker-v10';
+const ROOM_KEY = 'tv-tracker-room';
+const ROOM_NAME_KEY = 'tv-tracker-room-name';
+let shows = [], filter = 'all', networkFilter = '', sortMode = 'airdate', searching = false;
+let searchResults = [], deferredInstall = null, dragSrc = null;
+let currentRoomId = null, roomName = 'My Watchlist', pollTimer = null, lastUpdatedAt = null;
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const SB = (path, opts={}) => fetch(SUPABASE_URL + '/rest/v1' + path, {
+  ...opts,
+  headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation', ...(opts.headers||{}) }
+});
+async function sbGet(id) {
+  const res = await SB('/rooms?id=eq.' + id + '&select=*');
+  if (!res.ok) throw new Error('DB read failed ' + res.status);
+  const d = await res.json(); return d[0] || null;
+}
+async function sbCreate(id, name) {
+  const res = await SB('/rooms', { method: 'POST', body: JSON.stringify({ id, name, shows: [] }) });
+  if (!res.ok) throw new Error('DB create failed ' + res.status);
+}
+async function sbSave(id, showsData, name) {
+  const res = await SB('/rooms?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ shows: showsData, name, updated_at: new Date().toISOString() }) });
+  if (!res.ok) throw new Error('DB save failed ' + res.status);
+}
+
+// ── Room management ───────────────────────────────────────────────────────────
+function genRoomId() { return Math.random().toString(36).slice(2,7) + Math.random().toString(36).slice(2,6); }
+
+async function createRoom() {
+  document.getElementById('setup-error').textContent = '';
+  const name = document.getElementById('create-name').value.trim() || 'My Watchlist';
+  const id = genRoomId();
+  if (SUPABASE_OK) {
+    try { await sbCreate(id, name); } catch(e) { console.warn('DB create failed, local mode', e); }
+  }
+  enterRoom(id, [], name);
+}
+
+async function joinRoom() {
+  document.getElementById('setup-error').textContent = '';
+  let input = document.getElementById('join-input').value.trim();
+  if (!input) { document.getElementById('setup-error').textContent = 'Please paste a link or room ID.'; return; }
+  let id = input;
+  try { const u = new URL(input); id = u.searchParams.get('room') || id; } catch {}
+  id = id.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  if (id.length < 2) { document.getElementById('setup-error').textContent = 'Invalid link or room ID.'; return; }
+
+  if (SUPABASE_OK) {
+    try {
+      const room = await sbGet(id);
+      if (!room) { document.getElementById('setup-error').textContent = 'Room not found. Check your link.'; return; }
+      enterRoom(id, room.shows || [], room.name || 'My Watchlist');
+    } catch(e) { document.getElementById('setup-error').textContent = 'Could not connect. Try again.'; }
+  } else {
+    const saved = localStorage.getItem(LOCAL_KEY);
+    const savedName = localStorage.getItem(ROOM_NAME_KEY) || 'My Watchlist';
+    enterRoom(id, saved ? JSON.parse(saved) : [], savedName);
+  }
+}
+
+function enterRoom(id, initialShows, name) {
+  currentRoomId = id;
+  roomName = name || 'My Watchlist';
+  localStorage.setItem(ROOM_KEY, id);
+  localStorage.setItem(ROOM_NAME_KEY, roomName);
+  shows = initialShows.map(s => ({ ...s, _loading: false, _expanded: false }));
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+
+  // Set header title
+  const parts = roomName.toUpperCase().split(' ');
+  const first = parts[0], rest = parts.slice(1).join(' ');
+  document.getElementById('room-title').innerHTML = first + (rest ? ' <span>' + rest + '</span>' : '');
+
+  if (SUPABASE_OK) {
+    const roomUrl = location.origin + '?room=' + id;
+    document.getElementById('room-url-display').textContent = roomUrl;
+    document.getElementById('room-banner').classList.remove('hidden');
+    document.getElementById('sync-status').style.display = 'flex';
+    setSynced();
+    pollTimer = setInterval(async () => {
+      try {
+        const room = await sbGet(id);
+        if (room && room.updated_at && room.updated_at !== lastUpdatedAt) {
+          lastUpdatedAt = room.updated_at;
+          const expandedIds = new Set(shows.filter(s=>s._expanded).map(s=>s.id));
+          shows = (room.shows||[]).map(s => ({ ...s, _loading: false, _expanded: expandedIds.has(s.id) }));
+          render();
+        }
+      } catch {}
+    }, 6000);
+  } else {
+    document.getElementById('config-notice').classList.remove('hidden');
+    const saved = localStorage.getItem(LOCAL_KEY);
+    if (saved) try { shows = JSON.parse(saved).map(s=>({...s,_loading:false,_expanded:false})); } catch {}
+  }
+  render();
+  backgroundRefresh();
+}
+
+function leaveRoom() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  currentRoomId = null; shows = [];
+  localStorage.removeItem(ROOM_KEY);
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('room-banner').classList.add('hidden');
+  document.getElementById('sync-status').style.display = 'none';
+  document.getElementById('config-notice').classList.add('hidden');
+}
+
+function copyRoomLink() {
+  navigator.clipboard.writeText(location.origin + '?room=' + currentRoomId).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Link', 2000);
+  });
+}
+
+async function persistShows() {
+  const data = shows.map(({ _loading, _expanded, ...rest }) => rest);
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+  if (SUPABASE_OK && currentRoomId) {
+    setSyncing();
+    try { await sbSave(currentRoomId, data, roomName); lastUpdatedAt = new Date().toISOString(); setSynced(); }
+    catch { setSyncError(); }
+  }
+}
+
+function setSyncing() { const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label'); if(d){d.className='sync-dot syncing';l.textContent='Saving…';} }
+function setSynced() { const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label'); if(d){d.className='sync-dot';l.textContent='Synced';} }
+function setSyncError() { const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label'); if(d){d.className='sync-dot error';l.textContent='Sync error';} }
+
+// ── PWA ───────────────────────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall=e; document.getElementById('install-banner').classList.add('show'); });
+window.addEventListener('appinstalled', ()=>document.getElementById('install-banner').classList.remove('show'));
+document.getElementById('install-btn').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  const { outcome } = await deferredInstall.userChoice;
+  if (outcome === 'accepted') document.getElementById('install-banner').classList.remove('show');
+  deferredInstall = null;
+};
+document.getElementById('dismiss-banner').onclick = () => document.getElementById('install-banner').classList.remove('show');
+
+// ── TVMaze ────────────────────────────────────────────────────────────────────
+const TVMAZE = 'https://api.tvmaze.com';
+async function tvSearch(query) {
+  const res = await fetch(TVMAZE + '/search/shows?q=' + encodeURIComponent(query));
+  if (!res.ok) throw new Error('TVMaze search failed');
+  return (await res.json()).slice(0,6).map(({show:s}) => ({
+    id: s.id, name: s.name,
+    network: s.network?.name || s.webChannel?.name || 'Unknown',
+    status: s.status, premiered: s.premiered,
+    genre: (s.genres||[]).slice(0,2).join(' / '),
+    poster: s.image?.medium || null,
+  }));
+}
+async function tvShowDetails(tvmazeId) {
+  const [showRes, seasonsRes] = await Promise.all([
+    fetch(TVMAZE + '/shows/' + tvmazeId + '?embed=nextepisode'),
+    fetch(TVMAZE + '/shows/' + tvmazeId + '/seasons'),
+  ]);
+  const show = await showRes.json();
+  const seasonsRaw = seasonsRes.ok ? await seasonsRes.json() : [];
+  let seasons = seasonsRaw.map(s => ({ number: s.number, episodes: s.episodeOrder||s.episodeCount||null })).filter(s=>s.number>0);
+  if (seasons.some(s=>!s.episodes)) {
+    try {
+      const epRes = await fetch(TVMAZE + '/shows/' + tvmazeId + '/episodes');
+      if (epRes.ok) { const eps = await epRes.json(); for (const s of seasons) s.episodes = eps.filter(e=>e.season===s.number).length || s.episodes; }
+    } catch {}
+  }
+  const ne = show._embedded?.nextepisode;
+  return { seasons, nextEp: ne ? { season:ne.season, number:ne.number, name:ne.name, airdate:ne.airdate, status:'upcoming' } : null };
+}
+async function tvRefreshNextEp(tvmazeId) {
+  const res = await fetch(TVMAZE + '/shows/' + tvmazeId + '?embed=nextepisode');
+  if (!res.ok) throw new Error('Refresh failed');
+  const ep = (await res.json())._embedded?.nextepisode;
+  return ep ? { season:ep.season, number:ep.number, name:ep.name, airdate:ep.airdate, status:'upcoming' } : null;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function pad(n) { return String(n).padStart(2,'0'); }
+function daysUntil(d) {
+  if (!d) return null;
+  const [y,m,day] = d.split('-').map(Number);
+  const t = new Date(y,m-1,day), n = new Date();
+  n.setHours(0,0,0,0);
+  return Math.round((t-n)/86400000);
+}
+function fmtDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function normalizeNetwork(n) {
+  if (!n) return n;
+  if (n === 'HBO' || n === 'HBO Max' || n === 'Max') return 'Max/HBO';
+  return n;
+}
+function showEmoji(g='') {
+  g=g.toLowerCase();
+  if(g.includes('crime')||g.includes('thriller'))return'🔪';
+  if(g.includes('comedy'))return'😂';
+  if(g.includes('sci-fi')||g.includes('science'))return'🚀';
+  if(g.includes('fantasy'))return'🧙';
+  if(g.includes('horror'))return'👻';
+  if(g.includes('romance'))return'💕';
+  if(g.includes('action'))return'💥';
+  if(g.includes('documentary'))return'🎬';
+  if(g.includes('drama'))return'🎭';
+  return'📺';
+}
+function getEpMax(s) { if(!s.seasons?.length)return null; return s.seasons.find(x=>x.number===s.season)?.episodes||null; }
+function getMaxSeason(s) { if(!s.seasons?.length)return 99; return Math.max(...s.seasons.map(x=>x.number)); }
+function nextEpLabel(show) {
+  const ne=show.nextEp;
+  if(show._loading)return{text:'Loading…',cls:'loading'};
+  if(ne===undefined)return{text:'',cls:''};
+  if(!ne)return{text:'No upcoming eps',cls:'none'};
+  const days=daysUntil(ne.airdate), date=fmtDate(ne.airdate);
+  const dayStr=days===null?'':days===0?' · Today!':days===1?' · Tomorrow!':days>0?' · In '+days+'d':'';
+  if(days!==null&&days>=0&&days<=3)return{text:'S'+pad(ne.season)+'E'+pad(ne.number)+' · '+date+dayStr,cls:'soon'};
+  if(ne.status==='upcoming')return{text:'S'+pad(ne.season)+'E'+pad(ne.number)+' · '+date,cls:'upcoming'};
+  return{text:'Last: S'+pad(ne.season)+'E'+pad(ne.number)+' · '+date,cls:'aired'};
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderStats() {
+  if(!shows.length){document.getElementById('stats-bar').innerHTML='';return;}
+  const running=shows.filter(s=>s.status==='Running').length;
+  const upcoming=shows.filter(s=>s.nextEp?.status==='upcoming').length;
+  document.getElementById('stats-bar').innerHTML='<div class="stats"><div class="stat"><div class="stat-value">'+shows.length+'</div><div class="stat-label">Shows</div></div><div class="stat-divider"></div><div class="stat"><div class="stat-value">'+running+'</div><div class="stat-label">Airing</div></div><div class="stat-divider"></div><div class="stat"><div class="stat-value">'+upcoming+'</div><div class="stat-label">New Eps Soon</div></div></div>';
+}
+
+function getNetworks() {
+  return [...new Set(shows.map(s=>normalizeNetwork(s.network)).filter(Boolean))].sort();
+}
+
+function renderToolbar() {
+  if(!shows.length){document.getElementById('toolbar').innerHTML='';return;}
+  const networks = getNetworks();
+  let html = '<div class="toolbar"><div class="filters">';
+  html += '<button class="filter-btn '+(filter==='all'?'active':'')+'" onclick="setFilter(\'all\')">All</button>';
+  html += '<button class="filter-btn '+(filter==='airing'?'active':'')+'" onclick="setFilter(\'airing\')">Airing</button>';
+  html += '<button class="filter-btn '+(filter==='upcoming'?'active':'')+'" onclick="setFilter(\'upcoming\')">New Ep Soon</button>';
+  html += '<button class="filter-btn '+(filter==='ended'?'active':'')+'" onclick="setFilter(\'ended\')">Ended</button>';
+  html += '</div>';
+  html += '<div class="filters"><button class="filter-btn '+(sortMode==='network'?'active-net':'')+'" onclick="setSortMode(\'network\')">By Network</button>';
+  html += '<button class="filter-btn '+(sortMode==='airdate'?'active-net':'')+'" onclick="setSortMode(\'airdate\')">By Air Date</button></div>';
+  if (sortMode === 'network' && networks.length > 1) {
+    html += '<div class="filters"><button class="filter-btn '+(networkFilter===''?'active-net':'')+'" onclick="setNetworkFilter(\'\')">All Networks</button>';
+    for (const n of networks) {
+      html += '<button class="filter-btn '+(networkFilter===n?'active-net':'')+'" onclick="setNetworkFilter(\''+n.replace(/'/g,"\\'")+'\')">' + n + '</button>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('toolbar').innerHTML = html;
+}
+
+function renderGrid() {
+  let filtered = shows.filter(s => {
+    if(filter==='airing') return s.status==='Running';
+    if(filter==='ended') return s.status==='Ended';
+    if(filter==='upcoming') return s.nextEp?.status==='upcoming';
+    return true;
+  });
+  if(networkFilter) filtered = filtered.filter(s => normalizeNetwork(s.network)===networkFilter);
+  const el = document.getElementById('shows-grid');
+  if(!filtered.length) {
+    el.innerHTML = '<div class="shows-grid"><div class="empty"><div class="empty-icon">📺</div><h3>'+(shows.length?'No Shows Match':'Nothing Here Yet')+'</h3><p>'+(shows.length?'Try a different filter.':'Search above to get started.')+'</p></div></div>';
+    return;
+  }
+
+  // Helper to build a single card's HTML
+  function cardHtml(show) {
+    const ne=nextEpLabel(show), epMax=getEpMax(show), maxSeason=getMaxSeason(show);
+    const sc=show.status==='Running'?'badge-run':show.status==='Ended'?'badge-end':'badge-oth';
+    const poster=show.poster?'<img class="card-poster" src="'+show.poster+'" alt="" loading="lazy">':'<div class="card-poster-ph">'+showEmoji(show.genre)+'</div>';
+    let h = '<div class="show-card'+(show.done?' done':'')+'" id="card-'+show.id+'" draggable="true" ondragstart="onDragStart(event,'+show.id+')" ondragover="onDragOver(event,'+show.id+')" ondrop="onDrop(event,'+show.id+')" ondragend="onDragEnd()" onclick="toggleDetails(event)">';
+    h += poster;
+    h += '<div class="card-overlay"></div>';
+    h += '<div class="card-drag-handle">⠿</div>';
+    h += '<div class="card-actions"><button class="card-icon-btn" onclick="event.stopPropagation();refreshShow('+show.id+')">'+(show._loading?'⏳':'🔄')+'</button><button class="card-icon-btn danger" onclick="event.stopPropagation();removeShow('+show.id+')">✕</button></div>';
+    h += '<div class="card-info"><div class="card-name">'+show.name+'</div>';
+    if(ne.text) h += '<div class="card-next '+ne.cls+'">'+ne.text+'</div>';
+    h += '<div class="card-progress">S'+pad(show.season)+' · E'+pad(show.episode)+(epMax?' of '+epMax:'')+'</div>';
+    h += '<button class="card-done-btn'+(show.done?' is-done':'')+'" onclick="event.stopPropagation();toggleDone('+show.id+')">'+(show.done?'✓ Done':'Mark Done')+'</button>';
+    h += '</div>';
+    h += '<div class="card-detail">';
+    h += '<div class="detail-row"><span class="badge badge-net">'+normalizeNetwork(show.network)+'</span><span class="badge '+sc+'">'+show.status+'</span>'+(show.genre?'<span class="badge badge-net">'+show.genre+'</span>':'')+'</div>';
+    h += '<div class="ep-tracker"><span class="ep-label">Progress</span>';
+    h += '<div class="ep-controls"><button class="ep-btn" onclick="event.stopPropagation();prevSeason('+show.id+')"'+(show.season<=1?' disabled':'')+'>◀</button><span class="ep-val">S'+pad(show.season)+'</span><button class="ep-btn" onclick="event.stopPropagation();nextSeason('+show.id+')"'+(show.season>=maxSeason?' disabled':'')+'>▶</button></div>';
+    h += '<div class="ep-controls"><button class="ep-btn" onclick="event.stopPropagation();prevEp('+show.id+')"'+(show.episode<=1?' disabled':'')+'>−</button><span class="ep-val">E'+pad(show.episode)+'</span><button class="ep-btn" onclick="event.stopPropagation();nextEp_action('+show.id+')">+</button></div>';
+    if(epMax) h += '<span class="ep-max">/ '+epMax+'</span>';
+    h += '</div>';
+    h += '<textarea class="notes-input" rows="2" placeholder="Notes…" onclick="event.stopPropagation()" onchange="updateNotes('+show.id+',this.value)">'+(show.notes||'')+'</textarea>';
+    h += '</div></div>';
+    return h;
+  }
+
+  let html = '';
+  if (sortMode === 'airdate') {
+    const withDate = filtered.filter(s => s.nextEp?.airdate && !s.done).sort((a,b) => a.nextEp.airdate.localeCompare(b.nextEp.airdate));
+    const noDate   = filtered.filter(s => !s.nextEp?.airdate && s.status !== 'Ended' && !s.done);
+    const ended    = filtered.filter(s => s.status === 'Ended' && !s.done);
+    const done     = filtered.filter(s => s.done);
+    const active   = [...withDate, ...noDate, ...ended];
+    html += '<div class="shows-grid">';
+    for (const show of active) html += cardHtml(show);
+    html += '</div>';
+    if (done.length) {
+      html += '<div class="done-section-heading">✓ Done</div><div class="shows-grid">';
+      for (const show of done) html += cardHtml(show);
+      html += '</div>';
+    }
+  } else {
+    const networks = networkFilter ? [networkFilter] : [...new Set(filtered.map(s=>normalizeNetwork(s.network)))];
+    for (const net of networks) {
+      const netShows = filtered.filter(s => normalizeNetwork(s.network)===net);
+      if (!netShows.length) continue;
+      html += '<div class="network-section"><div class="network-heading">'+net+'</div><div class="shows-grid">';
+      for (const show of netShows) html += cardHtml(show);
+      html += '</div></div>';
+    }
+  }
+  el.innerHTML = html;
+}
+
+function render() { renderStats(); renderToolbar(); renderGrid(); }
+
+// ── Drag & drop ───────────────────────────────────────────────────────────────
+function onDragStart(e,id){dragSrc=id;e.dataTransfer.effectAllowed='move';setTimeout(()=>document.getElementById('card-'+id)?.classList.add('dragging'),0);}
+function onDragOver(e,id){e.preventDefault();document.querySelectorAll('.show-card').forEach(c=>c.classList.remove('drag-over'));if(id!==dragSrc)document.getElementById('card-'+id)?.classList.add('drag-over');}
+function onDrop(e,targetId){
+  e.preventDefault(); if(!dragSrc||dragSrc===targetId)return;
+  const si=shows.findIndex(s=>s.id===dragSrc), ti=shows.findIndex(s=>s.id===targetId);
+  if(si===-1||ti===-1)return;
+  const[m]=shows.splice(si,1); shows.splice(ti,0,m);
+  persistShows(); render();
+}
+function onDragEnd(){dragSrc=null;document.querySelectorAll('.show-card').forEach(c=>{c.classList.remove('dragging');c.classList.remove('drag-over');});}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function setFilter(f){filter=f;render();}
+function setNetworkFilter(n){networkFilter=n;render();}
+function setSortMode(m){sortMode=m;render();}
+function toggleDetails(e){
+  if(e.target.closest('.card-actions,.card-drag-handle,.card-done-btn,.ep-btn,.notes-input'))return;
+  const grid=document.getElementById('shows-grid');
+  if(grid.classList.contains('details-open')){
+    grid.classList.remove('details-open');
+  } else {
+    grid.classList.add('details-open');
+  }
+}
+function updateNotes(id,val){const s=shows.find(x=>x.id===id);if(s){s.notes=val;persistShows();}}
+function prevSeason(id){const s=shows.find(x=>x.id===id);if(s&&s.season>1){s.season--;s.episode=1;persistShows();render();}}
+function nextSeason(id){const s=shows.find(x=>x.id===id);if(s&&s.season<getMaxSeason(s)){s.season++;s.episode=1;persistShows();render();}}
+function prevEp(id){const s=shows.find(x=>x.id===id);if(s&&s.episode>1){s.episode--;persistShows();render();}}
+function nextEp_action(id){const s=shows.find(x=>x.id===id);if(!s)return;const m=getEpMax(s);if(m===null||s.episode<m){s.episode++;persistShows();render();}}
+function removeShow(id){if(!confirm('Remove this show?'))return;shows=shows.filter(s=>s.id!==id);persistShows();render();}
+function toggleDone(id){const s=shows.find(x=>x.id===id);if(s){s.done=!s.done;persistShows();render();}}
+
+async function refreshShow(id){
+  const s=shows.find(x=>x.id===id);if(!s||!s.tvmazeId)return;
+  s._loading=true;render();
+  try{const ne=await tvRefreshNextEp(s.tvmazeId);s.nextEp=ne;const d=await tvShowDetails(s.tvmazeId);if(d.seasons.length)s.seasons=d.seasons;}catch{}
+  s._loading=false;persistShows();render();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function setStatus(type,msg){document.getElementById('search-status').innerHTML=type==='idle'?'':'<div class="status-bar status-'+type+'">'+msg+'</div>';}
+function renderSearchResults(){
+  const el=document.getElementById('search-results');
+  if(!searchResults.length){el.innerHTML='';return;}
+  let html='<div class="search-results">';
+  for(const s of searchResults){
+    html+='<div class="search-result" onclick="addShow('+s.id+')">';
+    html+=s.poster?'<img class="result-img" src="'+s.poster+'" alt="">':'<div class="result-emoji">'+showEmoji(s.genre)+'</div>';
+    html+='<div class="result-info"><div class="result-name">'+s.name+'</div><div class="result-meta">'+s.network+' · '+s.status+(s.premiered?' · '+s.premiered.slice(0,4):'')+(s.genre?' · '+s.genre:'')+'</div></div>';
+    html+='<div class="result-add">+ Add</div></div>';
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+async function doSearch(){
+  const q=document.getElementById('search-input').value.trim();
+  if(!q||searching)return;
+  searching=true;searchResults=[];renderSearchResults();
+  setStatus('loading','🔍 Searching TVMaze…');
+  document.getElementById('search-btn').disabled=true;
+  try{searchResults=await tvSearch(q);setStatus(searchResults.length?'idle':'empty',searchResults.length?'':'No shows found for "'+q+'".');}
+  catch(e){setStatus('error','Search failed: '+e.message);}
+  searching=false;document.getElementById('search-btn').disabled=false;
+  renderSearchResults();
+}
+async function addShow(tvmazeId){
+  const show=searchResults.find(s=>s.id===tvmazeId);if(!show)return;
+  if(shows.find(s=>s.tvmazeId===tvmazeId)){alert('Already tracking!');return;}
+  const id=Date.now();
+  shows.unshift({id,tvmazeId,name:show.name,network:show.network,status:show.status,genre:show.genre||'',poster:show.poster||null,season:1,episode:1,nextEp:undefined,seasons:[],notes:'',_loading:true,_expanded:false});
+  searchResults=[];document.getElementById('search-input').value='';
+  setStatus('idle','');renderSearchResults();render();
+  try{const d=await tvShowDetails(tvmazeId);const s=shows.find(x=>x.id===id);if(s){if(d.seasons.length)s.seasons=d.seasons;s.nextEp=d.nextEp;}}
+  catch{const s=shows.find(x=>x.id===id);if(s)s.nextEp=null;}
+  const s=shows.find(x=>x.id===id);if(s)s._loading=false;
+  persistShows();render();
+}
+
+document.getElementById('search-btn').onclick=doSearch;
+document.getElementById('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+document.getElementById('create-name').addEventListener('keydown',e=>{if(e.key==='Enter')createRoom();});
+document.getElementById('join-input').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom();});
+
+// ── Background refresh ────────────────────────────────────────────────────────
+async function backgroundRefresh(){
+  const toRefresh=shows.filter(s=>s.tvmazeId&&s.status==='Running');
+  if(!toRefresh.length) return;
+  let changed = false;
+  for(const show of toRefresh){
+    try{
+      const nextEp = await tvRefreshNextEp(show.tvmazeId);
+      show.nextEp = nextEp;
+      changed = true;
+    }catch{}
+    await new Promise(r=>setTimeout(r,600));
+  }
+  if(changed){ persistShows(); render(); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const urlRoom = new URLSearchParams(location.search).get('room');
+  const savedRoom = localStorage.getItem(ROOM_KEY);
+  // Show setup screen only if no room to auto-join
+  if (!urlRoom && !savedRoom) {
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+  await loadConfig();
+  if (urlRoom) {
+    document.getElementById('join-input').value = urlRoom;
+    joinRoom();
+  } else if (savedRoom) {
+    document.getElementById('join-input').value = savedRoom;
+    joinRoom();
+  }
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+init();
+</script>
+</body>
+</html>
