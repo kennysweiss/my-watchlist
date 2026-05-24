@@ -1,4 +1,4 @@
-const CACHE = 'watchlist-v11';
+const CACHE = 'watchlist-v12';
 const STATIC = ['/manifest.json', '/icon-192.svg', '/icon-512.svg'];
 
 self.addEventListener('install', e => {
