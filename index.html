@@ -159,8 +159,7 @@
 
     /* Expanded detail */
     .card-detail{background:#0f0f18;border-top:2px solid var(--accent);padding:14px;display:none}
-    .details-open .card-detail{display:block}
-    .details-open .show-card{border-color:var(--accent)}
+    .show-card.expanded .card-detail{display:block}
     .detail-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
     .badge{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:4px;font-weight:500}
     .badge-net{background:#2a2a40;color:#d0d0e8;border:1px solid #4a4a68}
@@ -168,23 +167,23 @@
     .badge-end{background:rgba(232,109,109,.25);color:#e86d6d;border:1px solid rgba(232,109,109,.5)}
     .badge-oth{background:#2a2a40;color:#d0d0e8;border:1px solid #4a4a68}
     .ep-tracker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-    .ep-label{font-size:.7rem;color:var(--text);text-transform:uppercase;letter-spacing:.08em}
+    .ep-label{font-size:.7rem;color:#b0b0cc;text-transform:uppercase;letter-spacing:.08em}
     .ep-controls{display:flex;align-items:center;gap:4px}
-    .ep-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--accent);background:#1e1e2e;color:var(--accent);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .15s;font-weight:bold}
-    .ep-btn:hover:not(:disabled){background:var(--accent);color:#000}
-    .ep-btn:disabled{opacity:.25;cursor:not-allowed;border-color:#5a5a78;color:#5a5a78}
-    .ep-val{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;min-width:50px;text-align:center;color:var(--accent)}
-    .ep-max{font-size:.72rem;color:var(--text);font-weight:500}
+    .ep-btn{width:22px;height:22px;border-radius:50%;border:1px solid #5a5a78;background:#1e1e2e;color:#d0d0e8;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .ep-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+    .ep-btn:disabled{opacity:.3;cursor:not-allowed}
+    .ep-val{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;min-width:50px;text-align:center;color:var(--accent)}
+    .ep-max{font-size:.68rem;color:#b0b0cc}
     .notes-input{width:100%;background:#0a0a12;border:1px solid #3a3a58;border-radius:5px;padding:7px 10px;color:#e0e0f0;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;resize:none;transition:border-color .2s;margin-top:4px}
     .notes-input:focus{border-color:var(--accent)}
     .notes-input::placeholder{color:#5a5a78}
+    .done-btn{width:100%;margin-top:8px;background:transparent;border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;transition:all .2s}
+    .done-btn:hover{border-color:var(--danger);color:var(--danger)}
+    .done-btn.done-active{background:rgba(109,232,160,.1);border-color:var(--success);color:var(--success)}
     .show-card.done{opacity:.4;filter:grayscale(.5)}
     .show-card.done:hover{opacity:.65}
-    .done-section-heading{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;color:var(--muted);margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-    .card-done-btn{display:inline-block;margin-top:6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.25);border-radius:4px;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;font-size:.65rem;padding:4px 8px;cursor:pointer;transition:all .15s;pointer-events:all;line-height:1.4}
-    .card-done-btn:hover{border-color:var(--success);color:var(--success)}
-    .card-done-btn.is-done{border-color:var(--success);color:var(--success);background:rgba(109,232,160,.15)}
-    .empty{padding:60px 20px;color:var(--muted);grid-column:1/-1;text-align:center}
+
+    .empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1}
     .empty-icon{font-size:2.5rem;margin-bottom:12px}
     .empty h3{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--text);margin-bottom:6px}
     .empty p{font-size:.82rem}
@@ -567,43 +566,38 @@ function renderGrid() {
     const ne=nextEpLabel(show), epMax=getEpMax(show), maxSeason=getMaxSeason(show);
     const sc=show.status==='Running'?'badge-run':show.status==='Ended'?'badge-end':'badge-oth';
     const poster=show.poster?'<img class="card-poster" src="'+show.poster+'" alt="" loading="lazy">':'<div class="card-poster-ph">'+showEmoji(show.genre)+'</div>';
-    let h = '<div class="show-card'+(show.done?' done':'')+'" id="card-'+show.id+'" draggable="true" ondragstart="onDragStart(event,'+show.id+')" ondragover="onDragOver(event,'+show.id+')" ondrop="onDrop(event,'+show.id+')" ondragend="onDragEnd()" onclick="toggleDetails(event)">';
+    let h = '<div class="show-card'+(show._expanded?' expanded':'')+(show.done?' done':'')+'" id="card-'+show.id+'" draggable="true" ondragstart="onDragStart(event,'+show.id+')" ondragover="onDragOver(event,'+show.id+')" ondrop="onDrop(event,'+show.id+')" ondragend="onDragEnd()" onclick="toggleExpand(event,'+show.id+')">';
     h += poster;
     h += '<div class="card-overlay"></div>';
     h += '<div class="card-drag-handle">⠿</div>';
     h += '<div class="card-actions"><button class="card-icon-btn" onclick="event.stopPropagation();refreshShow('+show.id+')">'+(show._loading?'⏳':'🔄')+'</button><button class="card-icon-btn danger" onclick="event.stopPropagation();removeShow('+show.id+')">✕</button></div>';
     h += '<div class="card-info"><div class="card-name">'+show.name+'</div>';
     if(ne.text) h += '<div class="card-next '+ne.cls+'">'+ne.text+'</div>';
-    h += '<div class="card-progress">S'+pad(show.season)+' · E'+pad(show.episode)+(epMax?' of '+epMax:'')+'</div>';
-    h += '<button class="card-done-btn'+(show.done?' is-done':'')+'" onclick="event.stopPropagation();toggleDone('+show.id+')">'+(show.done?'✓ Done':'Mark Done')+'</button>';
-    h += '</div>';
-    h += '<div class="card-detail">';
+    h += '<div class="card-progress">Watched S'+pad(show.season)+' · E'+pad(show.episode)+(epMax?' of '+epMax:'')+'</div></div>';
+    h += '<div class="card-detail" onclick="event.stopPropagation()">';
     h += '<div class="detail-row"><span class="badge badge-net">'+normalizeNetwork(show.network)+'</span><span class="badge '+sc+'">'+show.status+'</span>'+(show.genre?'<span class="badge badge-net">'+show.genre+'</span>':'')+'</div>';
     h += '<div class="ep-tracker"><span class="ep-label">Progress</span>';
-    h += '<div class="ep-controls"><button class="ep-btn" onclick="event.stopPropagation();prevSeason('+show.id+')"'+(show.season<=1?' disabled':'')+'>◀</button><span class="ep-val">S'+pad(show.season)+'</span><button class="ep-btn" onclick="event.stopPropagation();nextSeason('+show.id+')"'+(show.season>=maxSeason?' disabled':'')+'>▶</button></div>';
-    h += '<div class="ep-controls"><button class="ep-btn" onclick="event.stopPropagation();prevEp('+show.id+')"'+(show.episode<=1?' disabled':'')+'>−</button><span class="ep-val">E'+pad(show.episode)+'</span><button class="ep-btn" onclick="event.stopPropagation();nextEp_action('+show.id+')">+</button></div>';
+    h += '<div class="ep-controls"><button class="ep-btn" onclick="prevSeason('+show.id+')"'+(show.season<=1?' disabled':'')+'>◀</button><span class="ep-val">S'+pad(show.season)+'</span><button class="ep-btn" onclick="nextSeason('+show.id+')"'+(show.season>=maxSeason?' disabled':'')+'>▶</button></div>';
+    h += '<div class="ep-controls"><button class="ep-btn" onclick="prevEp('+show.id+')"'+(show.episode<=1?' disabled':'')+'>−</button><span class="ep-val">E'+pad(show.episode)+'</span><button class="ep-btn" onclick="nextEp_action('+show.id+')"'+(epMax&&show.episode>=epMax?' disabled':'')+'>+</button></div>';
     if(epMax) h += '<span class="ep-max">/ '+epMax+'</span>';
     h += '</div>';
-    h += '<textarea class="notes-input" rows="2" placeholder="Notes…" onclick="event.stopPropagation()" onchange="updateNotes('+show.id+',this.value)">'+(show.notes||'')+'</textarea>';
+    h += '<textarea class="notes-input" rows="2" placeholder="Notes…" onchange="updateNotes('+show.id+',this.value)">'+(show.notes||'')+'</textarea>';
+    h += '<button class="done-btn'+(show.done?' done-active':'')+'" onclick="toggleDone('+show.id+')">'+(show.done?'✓ Marked Done — Undo':'Mark as Done')+'</button>';
     h += '</div></div>';
     return h;
   }
 
   let html = '';
   if (sortMode === 'airdate') {
+    // Sort: shows with upcoming eps by soonest airdate, then no-date shows, then ended
     const withDate = filtered.filter(s => s.nextEp?.airdate && !s.done).sort((a,b) => a.nextEp.airdate.localeCompare(b.nextEp.airdate));
     const noDate   = filtered.filter(s => !s.nextEp?.airdate && s.status !== 'Ended' && !s.done);
     const ended    = filtered.filter(s => s.status === 'Ended' && !s.done);
     const done     = filtered.filter(s => s.done);
-    const active   = [...withDate, ...noDate, ...ended];
+    const sorted   = [...withDate, ...noDate, ...ended, ...done];
     html += '<div class="shows-grid">';
-    for (const show of active) html += cardHtml(show);
+    for (const show of sorted) html += cardHtml(show);
     html += '</div>';
-    if (done.length) {
-      html += '<div class="done-section-heading">✓ Done</div><div class="shows-grid">';
-      for (const show of done) html += cardHtml(show);
-      html += '</div>';
-    }
   } else {
     const networks = networkFilter ? [networkFilter] : [...new Set(filtered.map(s=>normalizeNetwork(s.network)))];
     for (const net of networks) {
@@ -635,14 +629,13 @@ function onDragEnd(){dragSrc=null;document.querySelectorAll('.show-card').forEac
 function setFilter(f){filter=f;render();}
 function setNetworkFilter(n){networkFilter=n;render();}
 function setSortMode(m){sortMode=m;render();}
-function toggleDetails(e){
-  if(e.target.closest('.card-actions,.card-drag-handle,.card-done-btn,.ep-btn,.notes-input'))return;
-  const grid=document.getElementById('shows-grid');
-  if(grid.classList.contains('details-open')){
-    grid.classList.remove('details-open');
-  } else {
-    grid.classList.add('details-open');
-  }
+function toggleExpand(e,id){
+  if(e.target.closest('.card-detail,.card-actions,.card-drag-handle'))return;
+  const s=shows.find(x=>x.id===id); if(!s)return;
+  const opening=!s._expanded;
+  shows.forEach(x=>x._expanded=false);
+  if(opening) s._expanded=true;
+  render();
 }
 function updateNotes(id,val){const s=shows.find(x=>x.id===id);if(s){s.notes=val;persistShows();}}
 function prevSeason(id){const s=shows.find(x=>x.id===id);if(s&&s.season>1){s.season--;s.episode=1;persistShows();render();}}
