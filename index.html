@@ -129,4 +129,569 @@
     .row-top{display:flex;align-items:baseline;gap:8px}
     .row-name{font-size:.95rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .row-name.done{text-decoration:line-through;color:var(--muted)}
-    .row-sub{font-size:.72rem;color:var(--mu
+    .row-sub{font-size:.72rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row-next{font-size:.72rem;flex-shrink:0;text-align:right;line-height:1.3;max-width:110px}
+    .row-next.upcoming{color:var(--accent)}
+    .row-next.soon{color:var(--success)}
+    .row-next.aired{color:var(--muted)}
+    .row-next.loading{color:var(--muted);font-style:italic}
+    .row-actions{display:flex;gap:2px;flex-shrink:0}
+    .row-icon-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:6px 5px;font-size:.85rem;line-height:1;border-radius:5px}
+    .row-icon-btn:hover{color:var(--text);background:var(--border)}
+    .row-icon-btn.danger:hover{color:var(--danger)}
+    .row-icon-btn.done-btn.active{color:var(--success)}
+
+    .row-detail{background:#0f0f18;border-bottom:1px solid var(--border);padding:14px 14px 16px}
+    .detail-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    .badge{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:4px;font-weight:500}
+    .badge-net{background:#2a2a40;color:#d0d0e8;border:1px solid #4a4a68}
+    .badge-run{background:rgba(109,232,160,.15);color:var(--success);border:1px solid rgba(109,232,160,.4)}
+    .badge-end{background:rgba(232,109,109,.15);color:var(--danger);border:1px solid rgba(232,109,109,.4)}
+    .ep-tracker{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .ep-label{font-size:.7rem;color:var(--text);text-transform:uppercase;letter-spacing:.08em}
+    .ep-controls{display:flex;align-items:center;gap:4px}
+    .ep-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--accent);background:#1e1e2e;color:var(--accent);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;font-weight:900}
+    .ep-btn:hover:not(:disabled){background:var(--accent);color:#000}
+    .ep-btn:disabled{opacity:.3;cursor:not-allowed;border-color:#888;color:#888}
+    .ep-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;min-width:52px;text-align:center;color:var(--accent)}
+    .ep-max{font-size:.8rem;color:var(--text);font-weight:600}
+    .done-toggle{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .done-toggle-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:pointer;transition:all .15s}
+    .done-toggle-btn.active{background:rgba(109,232,160,.15);border-color:var(--success);color:var(--success)}
+    .notes-input{width:100%;background:#0a0a12;border:1px solid #3a3a58;border-radius:5px;padding:8px 10px;color:#e0e0f0;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;resize:none;transition:border-color .2s}
+    .notes-input:focus{border-color:var(--accent)}
+    .notes-input::placeholder{color:#5a5a78}
+    .done-section-heading{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;color:var(--muted);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+    .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-icon{font-size:2.5rem;margin-bottom:12px}
+    .empty h3{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--text);margin-bottom:6px}
+    .empty p{font-size:.82rem}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    @media(max-width:480px){.search-row{flex-direction:column}#app{padding:0 12px 80px}.setup-cards{flex-direction:column;align-items:center}.row-next{max-width:80px}}
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="setup-screen" style="display:none">
+    <div class="setup-logo">MY <span>WATCHLIST</span></div>
+    <div class="setup-tagline">Track every show. Share with anyone.</div>
+    <div class="setup-cards">
+      <div class="create-card">
+        <div class="create-card-icon">✨</div>
+        <div class="create-card-title">New Watchlist</div>
+        <div class="create-card-desc">Start fresh and get a shareable link for friends to join.</div>
+        <input class="create-name-input" id="create-name" placeholder="Name it (e.g. K&M Shows)…" maxlength="40">
+        <button class="create-btn" onclick="createRoom()">Create Watchlist</button>
+      </div>
+      <div class="join-card">
+        <div class="join-card-icon">🔗</div>
+        <div class="join-card-title">Join Existing</div>
+        <div class="join-card-desc">Someone shared a watchlist link with you? Paste it here.</div>
+        <input class="join-link-input" id="join-input" placeholder="Paste link or room ID…">
+        <button class="join-btn" onclick="joinRoom()">Join Watchlist</button>
+      </div>
+    </div>
+    <div id="setup-error" class="setup-error"></div>
+  </div>
+
+  <div id="main-app" style="display:none">
+    <div id="config-notice" class="hidden">
+      ⚠️ <strong>Running in local mode.</strong> Add <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> as Netlify environment variables to enable sync &amp; sharing.
+    </div>
+    <div id="install-banner">
+      <p>📲 <span>Install as app</span> — add to your desktop or home screen</p>
+      <button class="banner-btn" id="install-btn">Install</button>
+      <button class="banner-dismiss" id="dismiss-banner">✕</button>
+    </div>
+    <header class="header">
+      <h1 id="room-title">MY <span>WATCHLIST</span></h1>
+      <div class="header-right">
+        <div id="stats-bar"></div>
+        <div id="sync-status" class="sync-indicator" style="display:none">
+          <div class="sync-dot" id="sync-dot"></div>
+          <span id="sync-label">Synced</span>
+        </div>
+      </div>
+    </header>
+    <div id="room-banner" class="hidden">
+      <div class="room-info">
+        <div class="room-label">📎 Share this link to collaborate</div>
+        <div class="room-url" id="room-url-display" onclick="copyRoomLink()"></div>
+      </div>
+      <div class="room-actions">
+        <button class="room-btn" id="copy-btn" onclick="copyRoomLink()">Copy Link</button>
+        <button class="room-btn" onclick="leaveRoom()">Leave Room</button>
+      </div>
+    </div>
+    <div class="search-area">
+      <div class="search-title">Add a Show</div>
+      <div class="search-row">
+        <input class="search-input" id="search-input" placeholder="Search for a show…" autocomplete="off">
+        <button class="btn" id="search-btn">Search</button>
+      </div>
+      <div id="search-status"></div>
+      <div id="search-results"></div>
+    </div>
+    <div id="toolbar"></div>
+    <div id="shows-list"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+let SUPABASE_URL = '', SUPABASE_KEY = '', SUPABASE_OK = false;
+async function loadConfig() {
+  try {
+    const res = await fetch('/.netlify/functions/config');
+    if (res.ok) {
+      const cfg = await res.json();
+      SUPABASE_URL = cfg.supabaseUrl || '';
+      SUPABASE_KEY = cfg.supabaseKey || '';
+      SUPABASE_OK = !!(SUPABASE_URL && SUPABASE_KEY);
+    }
+  } catch {}
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const LOCAL_KEY = 'tv-tracker-v10';
+const ROOM_KEY = 'tv-tracker-room';
+const ROOM_NAME_KEY = 'tv-tracker-room-name';
+let shows = [], filter = 'all', networkFilter = '', searching = false;
+let searchResults = [], deferredInstall = null, dragSrc = null, expandedId = null;
+let currentRoomId = null, roomName = 'My Watchlist', pollTimer = null, lastUpdatedAt = null;
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const SB = (path, opts={}) => fetch(SUPABASE_URL + '/rest/v1' + path, {
+  ...opts,
+  headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation', ...(opts.headers||{}) }
+});
+async function sbGet(id) {
+  const res = await SB('/rooms?id=eq.' + id + '&select=*');
+  if (!res.ok) throw new Error('DB read failed ' + res.status);
+  const d = await res.json(); return d[0] || null;
+}
+async function sbCreate(id, name) {
+  const res = await SB('/rooms', { method: 'POST', body: JSON.stringify({ id, name, shows: [] }) });
+  if (!res.ok) throw new Error('DB create failed ' + res.status);
+}
+async function sbSave(id, showsData, name) {
+  const res = await SB('/rooms?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ shows: showsData, name, updated_at: new Date().toISOString() }) });
+  if (!res.ok) throw new Error('DB save failed ' + res.status);
+}
+
+// ── Room management ───────────────────────────────────────────────────────────
+function genRoomId() { return Math.random().toString(36).slice(2,7) + Math.random().toString(36).slice(2,6); }
+
+async function createRoom() {
+  document.getElementById('setup-error').textContent = '';
+  const name = document.getElementById('create-name').value.trim() || 'My Watchlist';
+  const id = genRoomId();
+  if (SUPABASE_OK) {
+    try { await sbCreate(id, name); } catch(e) { console.warn('DB create failed, local mode', e); }
+  }
+  enterRoom(id, [], name);
+}
+
+async function joinRoom() {
+  document.getElementById('setup-error').textContent = '';
+  let input = document.getElementById('join-input').value.trim();
+  if (!input) { document.getElementById('setup-error').textContent = 'Please paste a link or room ID.'; return; }
+  let id = input;
+  try { const u = new URL(input); id = u.searchParams.get('room') || id; } catch {}
+  id = id.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  if (id.length < 2) { document.getElementById('setup-error').textContent = 'Invalid link or room ID.'; return; }
+
+  if (SUPABASE_OK) {
+    try {
+      const room = await sbGet(id);
+      if (!room) { document.getElementById('setup-error').textContent = 'Room not found. Check your link.'; return; }
+      enterRoom(id, room.shows || [], room.name || 'My Watchlist');
+    } catch(e) { document.getElementById('setup-error').textContent = 'Could not connect. Try again.'; }
+  } else {
+    const saved = localStorage.getItem(LOCAL_KEY);
+    const savedName = localStorage.getItem(ROOM_NAME_KEY) || 'My Watchlist';
+    enterRoom(id, saved ? JSON.parse(saved) : [], savedName);
+  }
+}
+
+function enterRoom(id, initialShows, name) {
+  currentRoomId = id;
+  roomName = name || 'My Watchlist';
+  localStorage.setItem(ROOM_KEY, id);
+  localStorage.setItem(ROOM_NAME_KEY, roomName);
+  shows = initialShows.map(s => ({ ...s, _loading: false }));
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+
+  const parts = roomName.toUpperCase().split(' ');
+  const first = parts[0], rest = parts.slice(1).join(' ');
+  document.getElementById('room-title').innerHTML = first + (rest ? ' <span>' + rest + '</span>' : '');
+
+  if (SUPABASE_OK) {
+    const roomUrl = location.origin + '?room=' + id;
+    document.getElementById('room-url-display').textContent = roomUrl;
+    document.getElementById('room-banner').classList.remove('hidden');
+    document.getElementById('sync-status').style.display = 'flex';
+    setSynced();
+    pollTimer = setInterval(async () => {
+      try {
+        const room = await sbGet(id);
+        if (room && room.updated_at && room.updated_at !== lastUpdatedAt) {
+          lastUpdatedAt = room.updated_at;
+          shows = (room.shows||[]).map(s => ({ ...s, _loading: false }));
+          render();
+        }
+      } catch {}
+    }, 6000);
+  } else {
+    document.getElementById('config-notice').classList.remove('hidden');
+    const saved = localStorage.getItem(LOCAL_KEY);
+    if (saved) try { shows = JSON.parse(saved).map(s=>({...s,_loading:false})); } catch {}
+  }
+  render();
+  backgroundRefresh();
+}
+
+function leaveRoom() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  currentRoomId = null; shows = []; expandedId = null;
+  localStorage.removeItem(ROOM_KEY);
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('room-banner').classList.add('hidden');
+  document.getElementById('sync-status').style.display = 'none';
+  document.getElementById('config-notice').classList.add('hidden');
+}
+
+function copyRoomLink() {
+  navigator.clipboard.writeText(location.origin + '?room=' + currentRoomId).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Link', 2000);
+  });
+}
+
+async function persistShows() {
+  const data = shows.map(({ _loading, ...rest }) => rest);
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+  if (SUPABASE_OK && currentRoomId) {
+    setSyncing();
+    try { await sbSave(currentRoomId, data, roomName); lastUpdatedAt = new Date().toISOString(); setSynced(); }
+    catch { setSyncError(); }
+  }
+}
+
+function setSyncing() { const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label'); if(d){d.className='sync-dot syncing';l.textContent='Saving…';} }
+function setSynced() { const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label'); if(d){d.className='sync-dot';l.textContent='Synced';} }
+function setSyncError() { const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label'); if(d){d.className='sync-dot error';l.textContent='Sync error';} }
+
+// ── PWA ───────────────────────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall=e; document.getElementById('install-banner').classList.add('show'); });
+window.addEventListener('appinstalled', ()=>document.getElementById('install-banner').classList.remove('show'));
+document.getElementById('install-btn').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  const { outcome } = await deferredInstall.userChoice;
+  if (outcome === 'accepted') document.getElementById('install-banner').classList.remove('show');
+  deferredInstall = null;
+};
+document.getElementById('dismiss-banner').onclick = () => document.getElementById('install-banner').classList.remove('show');
+
+// ── TVMaze ────────────────────────────────────────────────────────────────────
+const TVMAZE = 'https://api.tvmaze.com';
+async function tvSearch(query) {
+  const res = await fetch(TVMAZE + '/search/shows?q=' + encodeURIComponent(query));
+  if (!res.ok) throw new Error('TVMaze search failed');
+  return (await res.json()).slice(0,6).map(({show:s}) => ({
+    id: s.id, name: s.name,
+    network: s.network?.name || s.webChannel?.name || 'Unknown',
+    status: s.status, premiered: s.premiered,
+    genre: (s.genres||[]).slice(0,2).join(' / '),
+    poster: s.image?.medium || null,
+  }));
+}
+async function tvShowDetails(tvmazeId) {
+  const [showRes, seasonsRes] = await Promise.all([
+    fetch(TVMAZE + '/shows/' + tvmazeId + '?embed=nextepisode'),
+    fetch(TVMAZE + '/shows/' + tvmazeId + '/seasons'),
+  ]);
+  const show = await showRes.json();
+  const seasonsRaw = seasonsRes.ok ? await seasonsRes.json() : [];
+  let seasons = seasonsRaw.map(s => ({ number: s.number, episodes: s.episodeOrder||s.episodeCount||null })).filter(s=>s.number>0);
+  if (seasons.some(s=>!s.episodes)) {
+    try {
+      const epRes = await fetch(TVMAZE + '/shows/' + tvmazeId + '/episodes');
+      if (epRes.ok) { const eps = await epRes.json(); for (const s of seasons) s.episodes = eps.filter(e=>e.season===s.number).length || s.episodes; }
+    } catch {}
+  }
+  const ne = show._embedded?.nextepisode;
+  return { seasons, nextEp: ne ? { season:ne.season, number:ne.number, name:ne.name, airdate:ne.airdate, status:'upcoming' } : null };
+}
+async function tvRefreshNextEp(tvmazeId) {
+  const res = await fetch(TVMAZE + '/shows/' + tvmazeId + '?embed=nextepisode');
+  if (!res.ok) throw new Error('Refresh failed');
+  const ep = (await res.json())._embedded?.nextepisode;
+  return ep ? { season:ep.season, number:ep.number, name:ep.name, airdate:ep.airdate, status:'upcoming' } : null;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function pad(n) { return String(n).padStart(2,'0'); }
+function daysUntil(d) {
+  if (!d) return null;
+  const [y,m,day] = d.split('-').map(Number);
+  const t = new Date(y,m-1,day), n = new Date();
+  n.setHours(0,0,0,0);
+  return Math.round((t-n)/86400000);
+}
+function fmtDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function normalizeNetwork(n) {
+  if (!n) return n;
+  if (n === 'HBO' || n === 'HBO Max' || n === 'Max') return 'Max/HBO';
+  return n;
+}
+function getEpMax(s) { if(!s.seasons?.length)return null; return s.seasons.find(x=>x.number===s.season)?.episodes||null; }
+function getMaxSeason(s) { if(!s.seasons?.length)return 99; return Math.max(...s.seasons.map(x=>x.number)); }
+function nextEpLabel(show) {
+  const ne=show.nextEp;
+  if(show._loading)return{text:'Loading…',cls:'loading'};
+  if(ne===undefined)return{text:'',cls:''};
+  if(!ne)return{text:'No upcoming eps',cls:'aired'};
+  const days=daysUntil(ne.airdate), date=fmtDate(ne.airdate);
+  const dayStr=days===null?'':days===0?' · Today!':days===1?' · Tmrw!':days>0?' · '+days+'d':'';
+  if(days!==null&&days>=0&&days<=3)return{text:'S'+pad(ne.season)+'E'+pad(ne.number)+dayStr,cls:'soon'};
+  if(ne.status==='upcoming')return{text:'S'+pad(ne.season)+'E'+pad(ne.number)+' · '+date,cls:'upcoming'};
+  return{text:'Last: S'+pad(ne.season)+'E'+pad(ne.number),cls:'aired'};
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderStats() {
+  if(!shows.length){document.getElementById('stats-bar').innerHTML='';return;}
+  const running=shows.filter(s=>s.status==='Running').length;
+  const upcoming=shows.filter(s=>s.nextEp?.status==='upcoming').length;
+  document.getElementById('stats-bar').innerHTML='<div class="stats"><div class="stat"><div class="stat-value">'+shows.length+'</div><div class="stat-label">Shows</div></div><div class="stat-divider"></div><div class="stat"><div class="stat-value">'+running+'</div><div class="stat-label">Airing</div></div><div class="stat-divider"></div><div class="stat"><div class="stat-value">'+upcoming+'</div><div class="stat-label">New Eps Soon</div></div></div>';
+}
+
+function getNetworks() {
+  return [...new Set(shows.map(s=>normalizeNetwork(s.network)).filter(Boolean))].sort();
+}
+
+function renderToolbar() {
+  if(!shows.length){document.getElementById('toolbar').innerHTML='';return;}
+  const networks = getNetworks();
+  let html = '<div class="toolbar"><div class="filters">';
+  html += '<button class="filter-btn '+(filter==='all'?'active':'')+'" onclick="setFilter(\'all\')">All</button>';
+  html += '<button class="filter-btn '+(filter==='airing'?'active':'')+'" onclick="setFilter(\'airing\')">Airing</button>';
+  html += '<button class="filter-btn '+(filter==='upcoming'?'active':'')+'" onclick="setFilter(\'upcoming\')">New Ep Soon</button>';
+  html += '<button class="filter-btn '+(filter==='ended'?'active':'')+'" onclick="setFilter(\'ended\')">Ended</button>';
+  html += '</div>';
+  if (networks.length > 1) {
+    html += '<div class="filters"><button class="filter-btn '+(networkFilter===''?'active-net':'')+'" onclick="setNetworkFilter(\'\')">All Networks</button>';
+    for (const n of networks) {
+      html += '<button class="filter-btn '+(networkFilter===n?'active-net':'')+'" onclick="setNetworkFilter(\''+n.replace(/'/g,"\\'")+'\')">' + n + '</button>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('toolbar').innerHTML = html;
+}
+
+function rowHtml(show) {
+  const ne=nextEpLabel(show), epMax=getEpMax(show), maxSeason=getMaxSeason(show);
+  const sc=show.status==='Running'?'badge-run':show.status==='Ended'?'badge-end':'badge-net';
+  const expanded = expandedId===show.id;
+  let h = '<div class="show-row'+(expanded?' expanded':'')+(show.done?' done':'')+'" id="row-'+show.id+'" draggable="true" ondragstart="onDragStart(event,'+show.id+')" ondragover="onDragOver(event,'+show.id+')" ondrop="onDrop(event,'+show.id+')" ondragend="onDragEnd()" onclick="toggleExpand(event,'+show.id+')">';
+  h += '<div class="row-drag" onclick="event.stopPropagation()">⠿</div>';
+  h += '<div class="row-main">';
+  h += '<div class="row-top"><span class="row-name'+(show.done?' done':'')+'">'+show.name+'</span></div>';
+  h += '<div class="row-sub">'+normalizeNetwork(show.network)+' · S'+pad(show.season)+'E'+pad(show.episode)+(epMax?'/'+epMax:'')+'</div>';
+  h += '</div>';
+  if(ne.text) h += '<div class="row-next '+ne.cls+'">'+ne.text+'</div>';
+  h += '<div class="row-actions">';
+  h += '<button class="row-icon-btn" onclick="event.stopPropagation();refreshShow('+show.id+')">'+(show._loading?'⏳':'🔄')+'</button>';
+  h += '<button class="row-icon-btn danger" onclick="event.stopPropagation();removeShow('+show.id+')">✕</button>';
+  h += '</div>';
+  h += '</div>';
+  if (expanded) {
+    h += '<div class="row-detail" onclick="event.stopPropagation()">';
+    h += '<div class="detail-row"><span class="badge badge-net">'+normalizeNetwork(show.network)+'</span><span class="badge '+sc+'">'+show.status+'</span>'+(show.genre?'<span class="badge badge-net">'+show.genre+'</span>':'')+'</div>';
+    h += '<div class="ep-tracker"><span class="ep-label">Progress</span>';
+    h += '<div class="ep-controls"><button class="ep-btn" onclick="prevSeason('+show.id+')"'+(show.season<=1?' disabled':'')+'>◀</button><span class="ep-val">S'+pad(show.season)+'</span><button class="ep-btn" onclick="nextSeason('+show.id+')"'+(show.season>=maxSeason?' disabled':'')+'>▶</button></div>';
+    h += '<div class="ep-controls"><button class="ep-btn" onclick="prevEp('+show.id+')"'+(show.episode<=1?' disabled':'')+'>−</button><span class="ep-val">E'+pad(show.episode)+'</span><button class="ep-btn" onclick="nextEp_action('+show.id+')"'+(epMax&&show.episode>=epMax?' disabled':'')+'>+</button></div>';
+    if(epMax) h += '<span class="ep-max">/ '+epMax+' eps</span>';
+    h += '</div>';
+    h += '<div class="done-toggle"><button class="done-toggle-btn'+(show.done?' active':'')+'" onclick="toggleDone('+show.id+')">'+(show.done?'✓ Marked as done':'Mark as done')+'</button></div>';
+    h += '<textarea class="notes-input" rows="2" placeholder="Notes…" onchange="updateNotes('+show.id+',this.value)">'+(show.notes||'')+'</textarea>';
+    h += '</div>';
+  }
+  return h;
+}
+
+function renderList() {
+  let filtered = shows.filter(s => {
+    if(filter==='airing') return s.status==='Running';
+    if(filter==='ended') return s.status==='Ended';
+    if(filter==='upcoming') return s.nextEp?.status==='upcoming';
+    return true;
+  });
+  if(networkFilter) filtered = filtered.filter(s => normalizeNetwork(s.network)===networkFilter);
+  const el = document.getElementById('shows-list');
+  if(!filtered.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📺</div><h3>'+(shows.length?'No Shows Match':'Nothing Here Yet')+'</h3><p>'+(shows.length?'Try a different filter.':'Search above to get started.')+'</p></div>';
+    return;
+  }
+  const active = filtered.filter(s => !s.done);
+  const done = filtered.filter(s => s.done);
+  let html = '<div class="show-list">';
+  for (const show of active) html += rowHtml(show);
+  html += '</div>';
+  if (done.length) {
+    html += '<div class="done-section-heading">✓ Done</div><div class="show-list">';
+    for (const show of done) html += rowHtml(show);
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function render() {
+  const y = window.scrollY;
+  renderStats(); renderToolbar(); renderList();
+  window.scrollTo(0, y);
+}
+
+// ── Ordering ──────────────────────────────────────────────────────────────────
+function bumpToTop(id) {
+  const i = shows.findIndex(s=>s.id===id);
+  if (i<=0) return;
+  const [m] = shows.splice(i,1);
+  shows.unshift(m);
+}
+
+// ── Drag & drop (manual reorder) ─────────────────────────────────────────────
+function onDragStart(e,id){dragSrc=id;e.dataTransfer.effectAllowed='move';setTimeout(()=>document.getElementById('row-'+id)?.classList.add('dragging'),0);}
+function onDragOver(e,id){e.preventDefault();document.querySelectorAll('.show-row').forEach(c=>c.classList.remove('drag-over'));if(id!==dragSrc)document.getElementById('row-'+id)?.classList.add('drag-over');}
+function onDrop(e,targetId){
+  e.preventDefault(); if(!dragSrc||dragSrc===targetId)return;
+  const si=shows.findIndex(s=>s.id===dragSrc), ti=shows.findIndex(s=>s.id===targetId);
+  if(si===-1||ti===-1)return;
+  const[m]=shows.splice(si,1); shows.splice(ti,0,m);
+  persistShows(); render();
+}
+function onDragEnd(){dragSrc=null;document.querySelectorAll('.show-row').forEach(c=>{c.classList.remove('dragging');c.classList.remove('drag-over');});}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function setFilter(f){filter=f;render();}
+function setNetworkFilter(n){networkFilter=n;render();}
+function toggleExpand(e,id){
+  if(e.target.closest('.row-detail,.row-actions,.row-drag'))return;
+  expandedId = expandedId===id ? null : id;
+  render();
+}
+function updateNotes(id,val){const s=shows.find(x=>x.id===id);if(s){s.notes=val;persistShows();}}
+function prevSeason(id){const s=shows.find(x=>x.id===id);if(s&&s.season>1){s.season--;s.episode=1;bumpToTop(id);persistShows();render();}}
+function nextSeason(id){const s=shows.find(x=>x.id===id);if(s&&s.season<getMaxSeason(s)){s.season++;s.episode=1;bumpToTop(id);persistShows();render();}}
+function prevEp(id){const s=shows.find(x=>x.id===id);if(s&&s.episode>1){s.episode--;bumpToTop(id);persistShows();render();}}
+function nextEp_action(id){const s=shows.find(x=>x.id===id);if(!s)return;const m=getEpMax(s);if(m===null||s.episode<m){s.episode++;bumpToTop(id);persistShows();render();}}
+function toggleDone(id){
+  const s=shows.find(x=>x.id===id);if(!s)return;
+  s.done = !s.done;
+  persistShows();render();
+}
+function removeShow(id){if(!confirm('Remove this show?'))return;shows=shows.filter(s=>s.id!==id);if(expandedId===id)expandedId=null;persistShows();render();}
+
+async function refreshShow(id){
+  const s=shows.find(x=>x.id===id);if(!s||!s.tvmazeId)return;
+  s._loading=true;render();
+  try{const ne=await tvRefreshNextEp(s.tvmazeId);s.nextEp=ne;const d=await tvShowDetails(s.tvmazeId);if(d.seasons.length)s.seasons=d.seasons;}catch{}
+  s._loading=false;persistShows();render();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function setStatus(type,msg){document.getElementById('search-status').innerHTML=type==='idle'?'':'<div class="status-bar status-'+type+'">'+msg+'</div>';}
+function renderSearchResults(){
+  const el=document.getElementById('search-results');
+  if(!searchResults.length){el.innerHTML='';return;}
+  let html='<div class="search-results">';
+  for(const s of searchResults){
+    html+='<div class="search-result" onclick="addShow('+s.id+')">';
+    html+=s.poster?'<img class="result-img" src="'+s.poster+'" alt="">':'<div class="result-emoji">📺</div>';
+    html+='<div class="result-info"><div class="result-name">'+s.name+'</div><div class="result-meta">'+s.network+' · '+s.status+(s.premiered?' · '+s.premiered.slice(0,4):'')+(s.genre?' · '+s.genre:'')+'</div></div>';
+    html+='<div class="result-add">+ Add</div></div>';
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+async function doSearch(){
+  const q=document.getElementById('search-input').value.trim();
+  if(!q||searching)return;
+  searching=true;searchResults=[];renderSearchResults();
+  setStatus('loading','🔍 Searching TVMaze…');
+  document.getElementById('search-btn').disabled=true;
+  try{searchResults=await tvSearch(q);setStatus(searchResults.length?'idle':'empty',searchResults.length?'':'No shows found for "'+q+'".');}
+  catch(e){setStatus('error','Search failed: '+e.message);}
+  searching=false;document.getElementById('search-btn').disabled=false;
+  renderSearchResults();
+}
+async function addShow(tvmazeId){
+  const show=searchResults.find(s=>s.id===tvmazeId);if(!show)return;
+  if(shows.find(s=>s.tvmazeId===tvmazeId)){alert('Already tracking!');return;}
+  const id=Date.now();
+  shows.unshift({id,tvmazeId,name:show.name,network:show.network,status:show.status,genre:show.genre||'',poster:show.poster||null,season:1,episode:1,nextEp:undefined,seasons:[],notes:'',done:false,_loading:true});
+  searchResults=[];document.getElementById('search-input').value='';
+  setStatus('idle','');renderSearchResults();render();
+  try{const d=await tvShowDetails(tvmazeId);const s=shows.find(x=>x.id===id);if(s){if(d.seasons.length)s.seasons=d.seasons;s.nextEp=d.nextEp;}}
+  catch{const s=shows.find(x=>x.id===id);if(s)s.nextEp=null;}
+  const s=shows.find(x=>x.id===id);if(s)s._loading=false;
+  persistShows();render();
+}
+
+document.getElementById('search-btn').onclick=doSearch;
+document.getElementById('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+document.getElementById('create-name').addEventListener('keydown',e=>{if(e.key==='Enter')createRoom();});
+document.getElementById('join-input').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom();});
+
+// ── Background refresh ────────────────────────────────────────────────────────
+async function backgroundRefresh(){
+  const toRefresh=shows.filter(s=>s.tvmazeId&&s.status==='Running');
+  if(!toRefresh.length) return;
+  let changed = false;
+  for(const show of toRefresh){
+    try{
+      const nextEp = await tvRefreshNextEp(show.tvmazeId);
+      show.nextEp = nextEp;
+      changed = true;
+    }catch{}
+    await new Promise(r=>setTimeout(r,600));
+  }
+  if(changed){ persistShows(); render(); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const urlRoom = new URLSearchParams(location.search).get('room');
+  const savedRoom = localStorage.getItem(ROOM_KEY);
+  if (!urlRoom && !savedRoom) {
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+  await loadConfig();
+  if (urlRoom) {
+    document.getElementById('join-input').value = urlRoom;
+    joinRoom();
+  } else if (savedRoom) {
+    document.getElementById('join-input').value = savedRoom;
+    joinRoom();
+  }
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+init();
+</script>
+</body>
+</html>
