@@ -528,6 +528,7 @@ function rowHtml(show) {
     if(epMax) h += '<span class="ep-max">/ '+epMax+' eps</span>';
     h += '</div>';
     h += '<div class="done-toggle"><button class="done-toggle-btn'+(show.done?' active':'')+'" onclick="toggleDone('+show.id+')">'+(show.done?'✓ Marked as done':'Mark as done')+'</button></div>';
+        h += '<div class="done-toggle"><span class="ep-label">Move</span><button class="ep-btn" onclick="moveShow('+show.id+',-1)">▲</button><button class="ep-btn" onclick="moveShow('+show.id+',1)">▼</button></div>';
     h += '<textarea class="notes-input" rows="2" placeholder="Notes…" onchange="updateNotes('+show.id+',this.value)">'+(show.notes||'')+'</textarea>';
     h += '</div>';
   }
@@ -604,7 +605,22 @@ function toggleDone(id){
   s.done = !s.done;
   persistShows();render();
 }
-function removeShow(id){if(!confirm('Remove this show?'))return;shows=shows.filter(s=>s.id!==id);if(expandedId===id)expandedId=null;persistShows();render();}
+function moveShow(id,dir){
+  const s=shows.find(x=>x.id===id);if(!s)return;
+  const visible=shows.filter(x=>{
+    if(!!x.done!==!!s.done)return false;
+    if(filter==='airing')return x.status==='Running';
+    if(filter==='ended')return x.status==='Ended';
+    if(filter==='upcoming')return x.nextEp?.status==='upcoming';
+    return true;
+  }).filter(x=>!networkFilter||normalizeNetwork(x.network)===networkFilter);
+  const i=visible.findIndex(x=>x.id===id), n=visible[i+dir];
+  if(!n)return;
+  const a=shows.indexOf(s), b=shows.indexOf(n);
+  [shows[a],shows[b]]=[shows[b],shows[a]];
+  persistShows();render();
+}
+  function removeShow(id){if(!confirm('Remove this show?'))return;shows=shows.filter(s=>s.id!==id);if(expandedId===id)expandedId=null;persistShows();render();}
 
 async function refreshShow(id){
   const s=shows.find(x=>x.id===id);if(!s||!s.tvmazeId)return;
